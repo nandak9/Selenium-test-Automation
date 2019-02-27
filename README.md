@@ -1,5 +1,3 @@
-## Objectivity.Test.Automation
-<img align="left" src="/Objectivity.Test.Automation.Common.Documentation/icons/Objectivity_logo_avatar.png">
 
 **C# Framework to automate tests using Selenium WebDriver**
 
@@ -41,17 +39,6 @@ Project API documentation can be found here: http://objectivityltd.github.io/Tes
 - Possiblity to check for JavaScript errors from browser, more details [here](https://github.com/ObjectivityLtd/Test.Automation/wiki/Verifying-Javascript-Errors-from-browser).
 
 For all documentation, visit the [Test.Automation Wiki](https://github.com/ObjectivityLtd/Test.Automation/wiki).
-
-Projects examples of using Test Framework :
-- Objectivity.Test.Automation.Tests.Angular for AngularJS
-- Objectivity.Test.Automation.Tests.Features for Specflow
-- Objectivity.Test.Automation.Tests.MsTest for MsTest
-- Objectivity.Test.Automation.Tests.NUnit for NUnit
-- Objectivity.Test.Automation.Tests.xUnit for xUnit
-- Objectivity.Test.Automation.Tests.PageObjects for Page Object Pattern
-- Objectivity.Test.Automation.Common.Documentation.shfbproj for building API documentation
-- Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser for cross browser parallel test execution with BrowserStack\SauceLabs\TestingBot\SeleniumGrid
-- Objectivity.Test.Automation.UnitTests for unit test of framework
 
 NUnit Example Test:
 
@@ -117,12 +104,4 @@ namespace Objectivity.Test.Automation.Tests.PageObjects.PageObjects.TheInternet
 }
 ```
 		
-#### Where to start?
 -------------
-- See [Getting started](https://github.com/ObjectivityLtd/Test.Automation/wiki/Getting%20started).
-
-Checkout the code or get it from [nuget.org](https://www.nuget.org/packages?q=Objectivity.Test.Automation.Common)
-- Objectivity.Test.Automation.Common.NUnit [![NuGet Badge](https://buildstats.info/nuget/Objectivity.Test.Automation.Common.NUnit)](https://www.nuget.org/packages/Objectivity.Test.Automation.Common.NUnit/)
-- Objectivity.Test.Automation.Common.Features [![NuGet Badge](https://buildstats.info/nuget/Objectivity.Test.Automation.Common.Features)](https://www.nuget.org/packages/Objectivity.Test.Automation.Common.Features/)
-- Objectivity.Test.Automation.Common.MsTest [![NuGet Badge](https://buildstats.info/nuget/Objectivity.Test.Automation.Common.MsTest)](https://www.nuget.org/packages/Objectivity.Test.Automation.Common.MsTest/)
-- Objectivity.Test.Automation.Common.xUnit [![NuGet Badge](https://buildstats.info/nuget/Objectivity.Test.Automation.Common.xUnit)](https://www.nuget.org/packages/Objectivity.Test.Automation.Common.xUnit/)
