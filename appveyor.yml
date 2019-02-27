@@ -1,0 +1,386 @@
+skip_commits:
+  files:
+    - README.md
+version: $(frameworkVersion).{build}
+branches:
+  except:
+  - gh-pages
+configuration: Release
+init:
+ - ps: >-
+      if ($env:APPVEYOR_REPO_TAG -eq "true")
+      {
+      
+        Update-AppveyorBuild -Version "$env:APPVEYOR_REPO_TAG_NAME.$env:APPVEYOR_BUILD_NUMBER"
+        
+        $env:frameworkVersion = "$env:APPVEYOR_REPO_TAG_NAME" 
+        
+      }
+      
+      echo 'frameworkVersion'  $env:frameworkVersion
+      
+      echo 'version' $env:appveyor_build_version 
+
+      echo 'seleniumGridVersion' $env:seleniumGridVersion 
+
+      echo 'seleniumGridUrl' $env:seleniumGridUrl 
+
+      echo 'latestNugetUrl' $env:latestNugetUrl 
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: $(frameworkVersion)
+  assembly_file_version: '{version}'
+  assembly_informational_version: $(frameworkVersion)
+environment:
+  APPVEYOR_RDP_PASSWORD:
+    secure: 3OiDAcFLoSt3UCnmEU+XgM2d541PAqCNJAPqoiRqwRI=
+  frameworkVersion: 3.1.3
+  seleniumGridVersion: selenium-server-standalone-3.141.59.jar
+  seleniumGridUrl: http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
+  latestNugetUrl: https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+  GithubAuthToken:
+    secure: x9uTnOFLUnZ6DiVhpBBxIJxij33Sz9uAIe+qef6M3sj9+J/AUmpfBmiGgqRabTqs
+  COVERALLS_REPO_TOKEN:
+    secure: ast5HH2v0jAME1tKDxPMw3TExnMxNp1+wXBea5zIzGNaKBm8ojTzv6YB03eQtEi+
+  browserstackuser:
+    secure: 0JGVozUyY/OYBuPZk2Pbgw==
+  browserstackkey:
+    secure: opcJPLrPneM8MyVpapvon/18SF9oGQ0+ylJINJeio78=
+  testingbotkey:
+    secure: 1aRAvq8QRbkPLQb7BWdggEqsgd0P8Wbn96zGFb9iBG75eWbexX5n38Zadmxkv2ng
+  testingbotsecret:
+    secure: 6hiQzkSN5XvXxWg+idSkvJSaNni9ZTCPwlWZy1s7BkagXFyrfUPmNdRWdWwy08B8
+  saucelabsusername:
+    secure: DlenWuQD9Ml7NAMwOkaHcA==
+  saucelabsaccessKey:
+    secure: D6Yy/Ng4/rfzsqQmnzwmTtN/Knee3c8/NtI1HgKke2ybA/6WpqP38RQfSHENYECa
+before_build:
+- ps: >-
+      $url = $env:latestNugetUrl
+      
+      echo "Downloading nuget from:" $url
+      
+      $output = $env:APPVEYOR_BUILD_FOLDER + ".\.nuget\nuget.exe"
+      
+      (New-Object System.Net.WebClient).DownloadFile($url, $output)
+      
+      echo "nuget downloaded to:" $output
+      
+      .\.nuget\nuget restore
+      
+build:
+  project: TestFramework.sln
+  verbosity: minimal
+after_build:
+ - ps: >-
+      echo '********************************************Creating nuget packages********************************************'
+      
+      Copy-Item .\.nuspec\Objectivity.Test.Automation.Nunit.nuspec .\\Objectivity.Test.Automation.Common\\Objectivity.Test.Automation.Common.nuspec
+      
+      .\.nuget\nuget pack .\Objectivity.Test.Automation.Common\Objectivity.Test.Automation.Common.csproj -symbols -properties Configuration=Release -Verbosity detailed
+      
+      Copy-Item .\.nuspec\Objectivity.Test.Automation.MsTest.nuspec .\\Objectivity.Test.Automation.Common\\Objectivity.Test.Automation.Common.nuspec
+      
+      .\.nuget\nuget pack .\Objectivity.Test.Automation.Common\Objectivity.Test.Automation.Common.csproj -symbols -properties Configuration=Release -Verbosity detailed
+      
+      Copy-Item .\.nuspec\Objectivity.Test.Automation.MsTest.nuspec .\\Objectivity.Test.Automation.Common\\Objectivity.Test.Automation.Common.nuspec
+      
+      .\.nuget\nuget pack .\Objectivity.Test.Automation.Common\Objectivity.Test.Automation.Common.csproj -symbols -properties Configuration=Release -Verbosity detailed
+      
+      Copy-Item .\.nuspec\Objectivity.Test.Automation.Features.nuspec .\\Objectivity.Test.Automation.Common\\Objectivity.Test.Automation.Common.nuspec
+      
+      .\.nuget\nuget pack .\Objectivity.Test.Automation.Common\Objectivity.Test.Automation.Common.csproj -symbols -properties Configuration=Release -Verbosity detailed
+      
+      Copy-Item .\.nuspec\Objectivity.Test.Automation.Xunit.nuspec .\\Objectivity.Test.Automation.Common\\Objectivity.Test.Automation.Common.nuspec
+      
+      .\.nuget\nuget pack .\Objectivity.Test.Automation.Common\Objectivity.Test.Automation.Common.csproj -symbols -properties Configuration=Release -Verbosity detailed
+      
+      echo '********************************************Copying files for gh-pages********************************************'
+      
+      Copy-Item -Path .\README.md -Destination .\Objectivity.Test.Automation.Common.Documentation\Help\ -recurse -force -verbose 
+      
+      New-Item .\Objectivity.Test.Automation.Common.Documentation\Help\Objectivity.Test.Automation.Common.Documentation\icons\ -Type Directory
+      
+      Copy-Item -Path .\Objectivity.Test.Automation.Common.Documentation\icons\Objectivity_logo_avatar.png -Destination .\Objectivity.Test.Automation.Common.Documentation\Help\Objectivity.Test.Automation.Common.Documentation\icons\ -recurse -force -verbose
+      
+      Copy-Item -Path .\Objectivity.Test.Automation.Common.Documentation\icons\Help.png -Destination .\Objectivity.Test.Automation.Common.Documentation\Help\Objectivity.Test.Automation.Common.Documentation\icons\ -recurse -force -verbose
+      
+      if ($env:APPVEYOR_REPO_TAG -eq "true")
+      {
+        echo '********************************************Cloning gh-pages branch********************************************'
+      
+        Invoke-Expression "git config --global credential.helper store"
+        
+        Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:GithubAuthToken):x-oauth-basic@github.com`n"
+        
+        Invoke-Expression "git config --global core.autocrlf true"
+        
+        Invoke-Expression "git config --global user.email 'TestAutomationGroup@objectivity.co.uk'"
+        
+        Invoke-Expression "git config --global user.name 'TestAutomationGroup'"
+        
+        Invoke-Expression "git clone https://github.com/ObjectivityLtd/Test.Automation.git --branch gh-pages .\Help"
+        
+        Remove-Item -recurse .\Help\* -exclude .git
+        
+      } else
+      {
+      
+        New-Item -ItemType Directory -Force -Path .\Help
+        
+      }
+      
+      Copy-Item -Path .\Objectivity.Test.Automation.Common.Documentation\Help\** -Destination .\Help\ -recurse -force
+     
+      if ($env:APPVEYOR_REPO_TAG -eq "true")
+      {
+        echo '********************************************Publishing new version of gh-pages********************************************'
+        
+        cd .\\Help 
+        
+        Invoke-Expression "git add --all"
+        
+        Invoke-Expression "git commit -m 'Publishing to gh-pages $env:appveyor_build_version'"
+        
+        Invoke-Expression "git push origin gh-pages --porcelain"
+        
+        cd ..
+        
+        Remove-Item .\\Help\\.git -Force  -Recurse -ErrorAction SilentlyContinue
+        
+      }
+      
+      7z a gh-pages_$env:appveyor_build_version.zip .\\Help\\** 
+      
+      appveyor PushArtifact gh-pages_$env:appveyor_build_version.zip
+test_script:
+- ps: >-
+    echo '********************************************Executing tests********************************************'
+
+    $OpenCover = (Resolve-Path ".\packages\OpenCover.*\tools\OpenCover.Console.exe").ToString()
+    
+    echo '********************************************XUnit tests********************************************'
+    
+    $xunit = (Resolve-Path ".\packages\xunit.runner.console.*\tools\xunit.console.exe").ToString()
+    
+    & $OpenCover -target:"$xunit" -mergeoutput -targetargs:".\Objectivity.Test.Automation.Tests.Xunit\bin\Release\Objectivity.Test.Automation.Tests.Xunit.dll -appveyor -noshadow" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Xunit\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Xunit\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Xunit\bin\Release\*.log
+    
+    echo '********************************************NUnit tests********************************************'
+    
+    & $OpenCover -target:nunit3-console.exe -mergeoutput -targetargs:".\Objectivity.Test.Automation.Tests.NUnit\bin\Release\Objectivity.Test.Automation.Tests.NUnit.dll .\Objectivity.Test.Automation.Tests.Angular\bin\Release\Objectivity.Test.Automation.Tests.Angular.dll .\Objectivity.Test.Automation.Tests.Features\bin\Release\Objectivity.Test.Automation.Tests.Features.dll .\Objectivity.Test.Automation.UnitTests\bin\Release\Objectivity.Test.Automation.UnitTests.dll --result=myresults.xml`;format=AppVeyor" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.NUnit\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.NUnit\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.NUnit\bin\Release\*.log
+
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Angular\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Angular\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Angular\bin\Release\*.log
+
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Features\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Features\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.Features\bin\Release\*.log
+
+    echo '********************************************Unit tests for Firefox********************************************'
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.UnitTests\bin\Release" "Objectivity.Test.Automation.UnitTests.dll.config" "//appSettings" "browser" "Firefox"
+
+    & $OpenCover -target:nunit3-console.exe -mergeoutput -targetargs:".\Objectivity.Test.Automation.UnitTests\bin\Release\Objectivity.Test.Automation.UnitTests.dll --where:cat=TakingScreehShots --result=myresults.xml`;format=AppVeyor" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.UnitTests\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.UnitTests\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.UnitTests\bin\Release\*.log
+
+
+    echo '********************************************MSTest tests********************************************'
+
+    & $OpenCover -target:vstest.console.exe -mergeoutput -targetargs:"/logger`:Appveyor .\Objectivity.Test.Automation.Tests.MSTest\bin\Release\Objectivity.Test.Automation.Tests.MsTest.dll /Settings`:.\Objectivity.Test.Automation.Tests.MSTest\bin\Release\Runsettings.runsettings" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.MSTest\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.MSTest\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.MSTest\bin\Release\*.log
+    
+    echo '********************************************CloudProviderCrossBrowser tests********************************************'
+    
+    echo '********************************************BrowserStack tests********************************************'
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//appSettings" "RemoteWebDriverHub" "http://$($env:browserstackuser):$($env:browserstackkey)@hub-cloud.browserstack.com/wd/hub"
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//DriverCapabilities" "build" "Objectivity.Test.Automation.Tests.BrowserStackCrossBrowser$env:appveyor_build_version" $true
+    
+    & $OpenCover -target:nunit3-console.exe -mergeoutput -targetargs:".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll --workers=5 --result=myresults.xml`;format=AppVeyor" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+      
+    echo '********************************************testingbot.com tests********************************************'  
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//appSettings" "RemoteWebDriverHub" "https://$($env:testingbotkey):$($env:testingbotsecret)@hub.testingbot.com/wd/hub/"
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//DriverCapabilities" "build" "$Objectivity.Test.Automation.Tests.TestingBotCrossBrowser$env:appveyor_build_version" $true
+
+    
+    & nunit3-console.exe .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll --workers=1 --where "test =~ Chrome" --result=myresults.xml`;format=AppVeyor
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+      
+    echo '********************************************saucelabs tests********************************************'
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//appSettings" "RemoteWebDriverHub" "http://$($env:saucelabsusername):$($env:saucelabsaccessKey)@ondemand.saucelabs.com:80/wd/hub"
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//DriverCapabilities" "build" "Objectivity.Test.Automation.Tests.SauceLabsCrossBrowser$env:appveyor_build_version" $true
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//environments/SafariMac" "platform" "macOS 10.14" $true
+    
+    & nunit3-console.exe .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll --workers=5 --where "test =~ Chrome || test =~ IE || test =~ Safari || test =~ Firefox" --result=myresults.xml`;format=AppVeyor
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+      
+    echo '********************************************Downloading Selenium Grid********************************************' 
+    
+    $url = $env:seleniumGridUrl
+    
+    $grid = $env:seleniumGridVersion
+    
+    $output = $env:APPVEYOR_BUILD_FOLDER + "\Objectivity.Test.Automation.Tests.NUnit\bin\Release\$grid"
+    
+    $outputLogs = $env:APPVEYOR_BUILD_FOLDER + "\Objectivity.Test.Automation.Tests.NUnit\bin\Release\"
+    
+    $start_time = Get-Date
+
+    echo "Downloading Selenium Grid from:" $url
+    
+    (New-Object System.Net.WebClient).DownloadFile($url, $output)
+    
+    echo "Selenium Grid downloaded to:" $output
+    
+    echo "Time taken to download $($grid): $((Get-Date).Subtract($start_time).Seconds) second(s)"
+    
+    echo '********************************************Start Selenium Grid in background****************************************' 
+    
+    $appHub=Start-Process java -ArgumentList '-jar', $output' -role hub' -RedirectStandardOutput $outputLogs'console_hub.out' -RedirectStandardError $outputLogs'console_hub.err' -passthru
+
+    Start-Sleep -s 5
+    
+    echo "Selenium Grid hub started"
+
+    $appNode=Start-Process java -ArgumentList '-jar', $output' -role node  -hub http://localhost:4444/grid/register' -RedirectStandardOutput $outputLogs'console_node.out' -RedirectStandardError $outputLogs'console_node.err' -passthru 
+    
+    Start-Sleep -s 5
+    
+    echo "Selenium Grid node started"
+    
+    echo '********************************************Run tests with Selenium Grid ****************************************' 
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.NUnit\bin\Release\" "Objectivity.Test.Automation.Tests.NUnit.dll.config" "//appSettings" "browser|RemoteWebDriverHub" "RemoteWebDriver|http://localhost:4444/wd/hub" $true
+    
+    & $OpenCover -target:nunit3-console.exe -mergeoutput -targetargs:".\Objectivity.Test.Automation.Tests.NUnit\bin\Release\Objectivity.Test.Automation.Tests.NUnit.dll --where (cat==BasicNUnit) --result=myresults.xml`;format=AppVeyor" -filter:"+[Objectivity.Test.Automation.Common]*" -register:user -output:opencoverCoverage.xml
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+      
+    echo '*****************************Run CloudProviderCrossBrowser tests with Selenium Grid****************************'
+    
+    .\scripts\set_AppConfig_for_tests.ps1 ".\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release" "Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll.config" "//appSettings" "RemoteWebDriverHub" "http://localhost:4444/wd/hub" $true
+    
+    & nunit3-console.exe .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser.dll --where "test =~ Chrome" --result=myresults.xml`;format=AppVeyor
+
+    if($lastexitcode -ne 0)
+      {
+       echo $lastexitcode
+      }
+     
+    echo '*****************************Stop Selenium Grid****************************'
+      
+    echo "Stop Selenium Grid node" 
+      
+    Stop-Process -Id $appNode.Id
+    
+    echo "Stop Selenium Grid hub" 
+    
+    Stop-Process -Id $appHub.Id
+    
+    echo '*****************************Add Selenium Grid logs to testresults****************************'
+    
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.NUnit\bin\Release\*.err
+    
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.NUnit\bin\Release\*.out
+      
+    echo '********************************************Sending coverage test results********************************************'
+    
+    $coveralls = (Resolve-Path ".\packages\coveralls.net.*\tools\csmacnz.coveralls.exe").ToString()
+    
+    & $coveralls --opencover -i opencoverCoverage.xml --repoToken $env:COVERALLS_REPO_TOKEN --useRelativePaths --commitId $env:APPVEYOR_REPO_COMMIT --commitBranch $env:APPVEYOR_REPO_BRANCH --commitAuthor $env:APPVEYOR_REPO_COMMIT_AUTHOR --commitEmail $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL --commitMessage $env:APPVEYOR_REPO_COMMIT_MESSAGE --jobId $env:APPVEYOR_BUILD_NUMBER --serviceName appveyor
+
+    7z a testresults_$env:appveyor_build_version.zip opencoverCoverage.xml
+    
+    echo '********************************************Uploading test results artifact********************************************'
+  
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\**\*.png
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\**\*.html
+
+    7z a testresults_$env:appveyor_build_version.zip .\Objectivity.Test.Automation.Tests.CloudProviderCrossBrowser\bin\Release\*.log
+    
+    appveyor PushArtifact testresults_$env:appveyor_build_version.zip
+artifacts:
+- path: .\Objectivity.Test.Automation.Common.*.nupkg
+  name: NuGet
+deploy:
+- provider: NuGet
+  api_key:
+    secure: 3oOPQoiQEcO33c/fxjAMdvjTlmB3dHrc/uwV9ehKYjNARfzrBT+xmuLCjTtKrI9F
+  on:
+    branch: master
+    appveyor_repo_tag: true
