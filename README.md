@@ -10,9 +10,6 @@
 
 Test Framework was designed in Objectivity to propose common way how people should create Selenium WebDriver tests.
 
-<img align="left" src="/Objectivity.Test.Automation.Common.Documentation/icons/Help.png">
-Project API documentation can be found here: http://objectivityltd.github.io/Test.Automation<br /><br />
-
 **It provides following features:**
 - Ready for parallel tests execution, more details [here](https://github.com/ObjectivityLtd/Test.Automation/wiki/Selenium%20Parallel%20tests%20execution)
 - Possibility to use MSTest, NUnit or xUNIT framework
