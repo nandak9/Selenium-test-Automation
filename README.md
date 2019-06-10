@@ -4,7 +4,7 @@ Test Framework was designed in Objectivity to propose common way how people shou
 **It provides following features:**
 - Ready for parallel tests execution, more details [here](https://github.com/ObjectivityLtd/Test.Automation/wiki/Selenium%20Parallel%20tests%20execution)
 - Possibility to use MSTest, NUnit or xUNIT framework
-- Specflow ready
+- Specflow ready 
 - Written entirely in C#
 - Contains example projects how to use it
 - Allows to use Chrome, Firefox, Safari or Internet Explorer
